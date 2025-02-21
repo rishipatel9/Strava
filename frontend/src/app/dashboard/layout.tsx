@@ -1,15 +1,23 @@
-import { AppSidebar } from "@/components/app-sidebar"
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 
 
-export default function Layout({ children }: { children: React.ReactNode }) {
+import { SidebarDemo } from "@/components/ui/AppSidebar";
+import { NEXT_AUTH } from "@/lib/auth";
+import { AuthOptions, getServerSession } from "next-auth";
+import React from "react";
+
+export const getUserDetails = async () => {
+  const session = await getServerSession(NEXT_AUTH as AuthOptions);
+  return session;
+};
+export default async function DashboardLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const session= await getUserDetails();
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <main>
-        <SidebarTrigger />
-        {children}
-      </main>
-    </SidebarProvider>
-  )
+    <div className="flex h-screen w-full">
+      <SidebarDemo  user={session} children={children} />
+    </div>
+  );
 }

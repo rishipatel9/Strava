@@ -1,47 +1,103 @@
 import React from "react";
-import Image from "next/image";
-import logo from "../../../public/logo.png";
-import l1 from "../../../public/places/l1.png";
-import l2 from "../../../public/places/l2.png";
-import l3 from "../../../public/places/l3.png";
-import places from "../../../public/places.png";
-import text from "../../../public/text.png";
 import { Button } from "../ui/button";
 import Link from "next/link";
+import Image from "next/image";
+
+import image1 from "../../../public/image1.png";
+import image2 from "../../../public/image2.png";
+import bags from "../../../public/bags.png";
+import plane from "../../../public/plane.png";
+import house from "../../../public/house.png";
+
+import { Card, CardDescription, CardTitle } from "../ui/card";
+import { WorldMapDemo } from "../Worldmapdemo";
+import { SparklesText } from "../magicui/sparkles-text";
 
 export const HeroSectionDemo = () => {
   return (
-    <div className="flex flex-col items-center min-h-screen px-6 py-8 lg:px-20 xl:px-40 font-sans text-gray-900">
-      {/* Logo */}
-      <div className="w-full flex justify-start py-4">
-        <Image src={logo} alt="logo" className="w-32 lg:w-40" />
+    <>
+      <div className="min-h-screen bg-gradient-to-b from-teal-100 to-white px-5 md:px-10">
+        {/* Navbar */}
+        <div className="flex justify-between items-center py-4">
+          <h1 className="text-teal-500 text-2xl md:text-3xl font-poppins font-bold">
+            TravelSafe!
+          </h1>
+          <Button variant="default">
+            <Link href="/auth/signup">
+              <span className="font-semibold text-sm md:text-lg text-white">
+                Signup
+              </span>
+            </Link>
+          </Button>
+        </div>
+
+        {/* Hero Section */}
+        <div className="flex flex-col md:flex-row items-center mt-8 md:mt-12">
+          <div className="text-center md:text-left md:w-1/2 text-3xl md:text-5xl font-bold">
+            <SparklesText
+              className="font-semibold"
+              text="Explore Beautiful World! Safely"
+            />
+          </div>
+          <div className="md:w-1/2 mt-6 md:mt-0 flex justify-center">
+            <Image
+              src={image1}
+              className="w-full max-w-sm md:max-w-md"
+              alt="image"
+            />
+          </div>
+        </div>
+
+        {/* Why Choose Us */}
+        <div className="flex flex-col md:flex-row items-center mt-10">
+          <div className="flex justify-center md:justify-start md:w-1/2">
+            <Image
+              src={image2}
+              className="w-full max-w-sm md:max-w-md"
+              alt="image2"
+            />
+          </div>
+          <div className="md:w-1/2 mt-6 md:mt-0 text-center md:text-left">
+            <span className="text-2xl font-semibold">Why Choose Us</span>
+            <p className="mt-2 text-sm md:text-base">
+              Enjoy different experiences in every place you visit and discover
+              new and affordable adventures.
+            </p>
+
+            <div className="mt-4 space-y-4">
+              {[
+                { img: plane, title: "Flight Ticket" },
+                { img: house, title: "Accommodation" },
+                { img: bags, title: "Travel Bags" },
+              ].map((item, index) => (
+                <Card
+                  key={index}
+                  className="p-4 bg-white border border-neutral-100 shadow-lg flex items-center space-x-4 cursor-pointer"
+                >
+                  <Image
+                    src={item.img}
+                    alt={item.title}
+                    className="w-10 h-10"
+                  />
+                  <div>
+                    <CardTitle className="text-sm">{item.title}</CardTitle>
+                    <CardDescription className="text-neutral-500">
+                      Vitae donec pellentesque a aliquam et ultricies auctor.
+                    </CardDescription>
+                  </div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
 
-      {/* Places Image */}
-      <div className="mt-16 w-full flex justify-center">
-        <Image src={places} alt="places" className="w-3/4 max-w-xl" />
+      {/* World Map Section */}
+      <div className="mt-10">
+        <WorldMapDemo />
       </div>
-
-      {/* Text Image */}
-      <div className="mt-4 w-full flex justify-center">
-        <Image src={text} alt="text" className="w-2/3 max-w-lg" />
-      </div>
-
-      {/* Heading */}
-      <div className="mt-4 text-center px-4 lg:px-20">
-        <h1 className="text-xl lg:text-2xl font-semibold leading-snug">
-          Worried about Your Safety During your Travel? We’ve got you covered.
-        </h1>
-      </div>
-
-      {/* Button */}
-      <div className="mt-6 w-full flex justify-center">
-        <Button className="bg-blue-600 text-white px-6 py-3 rounded-3xl text-lg font-medium shadow-md transition hover:bg-blue-700 w-48">
-          <Link href="/auth/signup">
-            <span>Login</span>
-          </Link>
-        </Button>
-      </div>
-    </div>
+    </>
   );
 };
+
+export default HeroSectionDemo;

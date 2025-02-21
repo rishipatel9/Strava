@@ -19,6 +19,10 @@ import axios from "axios";
 import { BASEURL } from "@/utils/constants";
 import { useSession } from "next-auth/react";
 import { Toaster, toast } from 'sonner'
+import Siriwave from 'react-siriwave';
+import ReactSiriwave from "@/components/Strava";
+import LocationName from "@/components/LocationName";
+
 
 export default function LocalFeed() {
   const { data: session } = useSession();
@@ -103,9 +107,10 @@ export default function LocalFeed() {
         <div className="flex items-center gap-2">
           
           <MapPin className="text-primary" />
-          <span className="font-semibold text-primary">Downtown</span>
+          <span className="font-semibold text-primary"><LocationName/></span>
         </div>
       </header>
+      <ReactSiriwave/>
 
       <Tabs defaultValue="feed" className="w-full">
         <TabsList className="grid w-full grid-cols-2">

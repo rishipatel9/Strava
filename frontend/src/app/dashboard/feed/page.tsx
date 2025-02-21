@@ -13,141 +13,97 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, MessageCircle, Share2, MapPin, Send } from "lucide-react";
-import { motion } from "framer-motion";
-import LocationName from "@/components/LocationName";
-
-// Types
-interface Post {
-  id: string;
-  user: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
-  content: string;
-  location: string;
-  timestamp: string;
-  likes: number;
-  comments: Comment[];
-}
-
-interface Comment {
-  id: string;
-  user: {
-    name: string;
-    username: string;
-    avatar: string;
-  };
-  content: string;
-  timestamp: string;
-}
+import { Heart, MessageCircle, Send, MapPin } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import axios from "axios";
+import { BASEURL } from "@/utils/constants";
+import { useSession } from "next-auth/react";
+import { Toaster, toast } from 'sonner'
 
 export default function LocalFeed() {
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: "1",
-      user: {
-        name: "John Doe",
-        username: "johndoe",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content: "Just discovered an amazing coffee shop in downtown! ☕",
-      location: "Downtown",
-      timestamp: "2 minutes ago",
-      likes: 5,
-      comments: [
-        {
-          id: "c1",
-          user: {
-            name: "Jane Smith",
-            username: "janesmith",
-            avatar: "/placeholder.svg?height=40&width=40",
-          },
-          content: "Which one? I need to check it out!",
-          timestamp: "1 minute ago",
-        },
-      ],
-    },
-  ]);
-
+  const { data: session } = useSession();
   const [newPost, setNewPost] = useState("");
-  const [currentLocation] = useState("Downtown");
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
     {}
   );
 
-  const handlePost = () => {
-    if (!newPost.trim()) return;
+  const queryClient = useQueryClient();
 
-    const post: Post = {
-      id: String(Date.now()),
-      user: {
-        name: "Current User",
-        username: "currentuser",
-        avatar: "/placeholder.svg?height=40&width=40",
-      },
-      content: newPost,
-      location: currentLocation,
-      timestamp: "Just now",
-      likes: 0,
-      comments: [],
-    };
+  // Fetch posts
+  const { data, isLoading } = useQuery({
+    queryKey: ["posts"],
+    queryFn: async () => {
+      const response = await axios.get(`${BASEURL}/posts/getall`, {
+        headers: {
+          Authorization: `Bearer ${session?.user.id}`,
+        },
+      });
+      return response.data.data;
+    },
+  });
 
-    setPosts([post, ...posts]);
-    setNewPost("");
-  };
-
-  const handleComment = (postId: string) => {
-    if (!commentInputs[postId]?.trim()) return;
-
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return {
-            ...post,
-            comments: [
-              ...post.comments,
-              {
-                id: String(Date.now()),
-                user: {
-                  name: "Current User",
-                  username: "currentuser",
-                  avatar: "/placeholder.svg?height=40&width=40",
-                },
-                content: commentInputs[postId],
-                timestamp: "Just now",
-              },
-            ],
-          };
+  // Like Mutation
+  const likeMutation = useMutation({
+    mutationFn: async (postId: string) => {
+      await axios.post(
+        `${BASEURL}/posts/like/${postId}`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user.id}`,
+          },
         }
-        return post;
-      })
-    );
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey:["posts"]}); 
+    },
+  });
 
-    setCommentInputs({ ...commentInputs, [postId]: "" });
-  };
-
-  const handleLike = (postId: string) => {
-    setPosts(
-      posts.map((post) => {
-        if (post.id === postId) {
-          return { ...post, likes: post.likes + 1 };
+  // Comment Mutation
+  const commentMutation = useMutation({
+    mutationFn: async ({ postId, comment }: { postId: string; comment: string }) => {
+      await axios.post(
+        `${BASEURL}/posts/comment/${postId}`,
+        { comment },
+        {
+          headers: {
+            Authorization: `Bearer ${session?.user.id}`,
+          },
         }
-        return post;
-      })
-    );
-  };
+      );
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({queryKey:["posts"]}); // Refresh posts
+    },
+  });
+
+  const postMutation = useMutation({
+    mutationFn: async () => {
+      const response = await axios.post(`${BASEURL}/posts/create`, { title: newPost, content: "f" }, {
+        headers: {
+          Authorization: `Bearer ${session?.user.id}`,
+        },
+      });
+      return response;
+    },
+    onSuccess:()=>{
+      toast.success('post created')
+      queryClient.invalidateQueries({queryKey:["posts"]})
+    },
+    onError:()=>{
+      toast.error("Failed")
+    }
+  })
 
   return (
     <div className="max-w-3xl mx-auto p-4 space-y-6">
       <header className="flex items-center justify-between mb-6">
         <h1 className="text-3xl font-bold text-primary">Local Feed</h1>
         <div className="flex items-center gap-2">
+          
           <MapPin className="text-primary" />
-          <span className="font-semibold text-primary">
-            <LocationName />
-          </span>
+          <span className="font-semibold text-primary">Downtown</span>
         </div>
       </header>
 
@@ -156,122 +112,75 @@ export default function LocalFeed() {
           <TabsTrigger value="feed">Feed</TabsTrigger>
           <TabsTrigger value="create">Create Post</TabsTrigger>
         </TabsList>
+
+        {/* Feed Section */}
         <TabsContent value="feed">
           <ScrollArea className="h-[calc(100vh-200px)]">
-            <div className="space-y-6 pr-4">
-              {posts.map((post) => (
-                <motion.div
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.3 }}
-                >
-                  <Card className="overflow-hidden">
-                    <CardHeader className="flex flex-row items-center gap-4 pb-2">
+            {isLoading ? (
+              <p>Loading posts...</p>
+            ) : (
+              data?.map((post: any) => (
+                <Card key={post.id} className="mb-4">
+                  <CardHeader>
+                    <div className="flex items-center gap-4">
                       <Avatar>
-                        <AvatarImage
-                          src={post.user.avatar}
-                          alt={post.user.name}
-                        />
-                        <AvatarFallback>{post.user.name[0]}</AvatarFallback>
+                        <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
+                        <AvatarFallback>U</AvatarFallback>
                       </Avatar>
-                      <div>
-                        <div className="font-semibold">{post.user.name}</div>
-                        <div className="text-sm text-muted-foreground">
-                          @{post.user.username}
-                        </div>
-                      </div>
-                    </CardHeader>
+                      <div className="font-semibold">{post.title}</div>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p>{post.content}</p>
+                  </CardContent>
+                  <CardFooter className="flex items-center gap-4">
+                    <Button
+                      variant="ghost"
+                      onClick={() => likeMutation.mutate(post.id)}
+                    >
+                      <Heart className="text-red-500" /> {post.likes.length}
+                    </Button>
 
-                    <CardContent>
-                      <p className="mb-2 text-lg">{post.content}</p>
-                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <MapPin size={14} />
-                        <span>{post.location}</span>
-                        <span>•</span>
-                        <span>{post.timestamp}</span>
-                      </div>
-                    </CardContent>
+                    <Button
+                      variant="ghost"
+                      onClick={() => setCommentInputs((prev) => ({
+                        ...prev,
+                        [post.id]: prev[post.id] ? "" : "",
+                      }))}
+                    >
+                      <MessageCircle /> {post.comments.length}
+                    </Button>
+                  </CardFooter>
 
-                    <CardFooter className="flex flex-col gap-4">
-                      <div className="flex gap-6 w-full">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex gap-2"
-                          onClick={() => handleLike(post.id)}
-                        >
-                          <Heart size={18} className="text-primary" />{" "}
-                          {post.likes}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex gap-2"
-                        >
-                          <MessageCircle size={18} className="text-primary" />{" "}
-                          {post.comments.length}
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="flex gap-2"
-                        >
-                          <Share2 size={18} className="text-primary" />
-                        </Button>
-                      </div>
-
-                      <div className="w-full space-y-4">
-                        {post.comments.map((comment) => (
-                          <div key={comment.id} className="flex gap-2">
-                            <Avatar className="w-8 h-8">
-                              <AvatarImage
-                                src={comment.user.avatar}
-                                alt={comment.user.name}
-                              />
-                              <AvatarFallback>
-                                {comment.user.name[0]}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <div className="text-sm">
-                                <span className="font-semibold">
-                                  {comment.user.name}
-                                </span>
-                                <span className="text-muted-foreground ml-2">
-                                  {comment.timestamp}
-                                </span>
-                              </div>
-                              <p className="text-sm">{comment.content}</p>
-                            </div>
-                          </div>
-                        ))}
-
-                        <div className="flex gap-2">
-                          <Input
-                            placeholder="Write a comment..."
-                            value={commentInputs[post.id] || ""}
-                            onChange={(e) =>
-                              setCommentInputs({
-                                ...commentInputs,
-                                [post.id]: e.target.value,
-                              })
-                            }
-                            className="text-sm"
-                          />
-                          <Button
-                            size="icon"
-                            onClick={() => handleComment(post.id)}
-                          >
-                            <Send size={18} />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardFooter>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+                  {/* Comment Input */}
+                  {commentInputs[post.id] !== undefined && (
+                    <div className="p-4">
+                      <Input
+                        placeholder="Add a comment..."
+                        value={commentInputs[post.id] || ""}
+                        onChange={(e) =>
+                          setCommentInputs((prev) => ({
+                            ...prev,
+                            [post.id]: e.target.value,
+                          }))
+                        }
+                      />
+                      <Button
+                        className="mt-2"
+                        onClick={() =>
+                          commentMutation.mutate({
+                            postId: post.id,
+                            comment: commentInputs[post.id],
+                          })
+                        }
+                      >
+                        <Send className="mr-2" /> Send
+                      </Button>
+                    </div>
+                  )}
+                </Card>
+              ))
+            )}
           </ScrollArea>
         </TabsContent>
         <TabsContent value="create">
@@ -280,10 +189,7 @@ export default function LocalFeed() {
               <div className="flex flex-col gap-4">
                 <div className="flex items-center gap-4">
                   <Avatar>
-                    <AvatarImage
-                      src="/placeholder.svg?height=40&width=40"
-                      alt="Current User"
-                    />
+                    <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Current User" />
                     <AvatarFallback>CU</AvatarFallback>
                   </Avatar>
                   <div className="font-semibold">Current User</div>
@@ -294,14 +200,13 @@ export default function LocalFeed() {
                   onChange={(e) => setNewPost(e.target.value)}
                   className="min-h-[100px]"
                 />
-                <Button onClick={handlePost} className="self-end">
-                  Post
-                </Button>
+                <Button className="self-end" onClick={()=>postMutation.mutate()}>Post</Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      <Toaster />
     </div>
   );
 }

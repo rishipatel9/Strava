@@ -36,7 +36,7 @@ export const HeroSectionDemo = () => {
           <div className="text-center md:text-left md:w-1/2 text-3xl md:text-5xl font-bold">
             <SparklesText
               className="font-semibold"
-              text="Explore Beautiful World! Safely"
+              text="Explore The Beautiful World..! Safely..."
             />
           </div>
           <div className="md:w-1/2 mt-6 md:mt-0 flex justify-center">
@@ -66,9 +66,9 @@ export const HeroSectionDemo = () => {
 
             <div className="mt-4 space-y-4">
               {[
-                { img: plane, title: "Flight Ticket" },
-                { img: house, title: "Accommodation" },
-                { img: bags, title: "Travel Bags" },
+                { img: plane, title: "Location Bases Support" },
+                { img: house, title: "Live Alerts and Report Based Awards" },
+                { img: bags, title: "Local Feed" },
               ].map((item, index) => (
                 <Card
                   key={index}

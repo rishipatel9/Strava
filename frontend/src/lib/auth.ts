@@ -1,7 +1,24 @@
 import GoogleProvider from "next-auth/providers/google";
 import GithubProvider from "next-auth/providers/github";
 import CredentialsProvider from "next-auth/providers/credentials";
-const NEXT_AUTH = {
+import { NextAuthOptions, Session } from "next-auth";
+import axios from "axios";
+
+declare module "next-auth" {
+  interface Session {
+    user: {
+      id: any;
+      name?: string | null | undefined;
+      email?: string | null | undefined;
+      image?: any;
+    };
+    accessToken?: any;
+  }
+}
+
+const BACKEND_URL = process.env.BACKEND_URL || "http://localhost:4000"; 
+
+const NEXT_AUTH: NextAuthOptions = {
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID ?? "",
@@ -14,16 +31,28 @@ const NEXT_AUTH = {
   ],
   secret: process.env.NEXTAUTH_SECRET,
   callbacks: {
-    async jwt({ token, user }: { token: any; user: any }) {
+    async jwt({ token, user, account }) {
       if (user) {
-        token.id = user.id;
-        token.email = user.email;
-        token.name = user.name;
-        token.image= user.image;
+        try {
+          // Send request to backend to create user
+          const response = await axios.post(`${BACKEND_URL}/signup`, {
+            email: user.email,
+            name: user.name,
+            image: user.image,
+          });
+
+          const dbUser = response.data; 
+          token.id = dbUser.id;
+          token.email = dbUser.email;
+          token.name = dbUser.name;
+          token.image = dbUser?.image;
+        } catch (error) {
+          console.error("Error creating user:", error);
+        }
       }
       return token;
     },
-    async session({ session, token }: { session: any; token: any }) {
+    async session({ session, token }) {
       if (token) {
         session.user = {
           id: token.id,
@@ -31,10 +60,11 @@ const NEXT_AUTH = {
           name: token.name,
           image: token.image,
         };
+        session.accessToken = token.id;
       }
       return session;
     },
-    async redirect({ url, baseUrl }: { url: string; baseUrl: string }) {
+    async redirect({ url, baseUrl }) {
       return `${baseUrl}/dashboard`;
     },
   },
@@ -49,10 +79,3 @@ const NEXT_AUTH = {
 };
 
 export { NEXT_AUTH };
-
-export type User = {
-  id: string;
-  name: string;
-  email: string;
-  image: string;
-};

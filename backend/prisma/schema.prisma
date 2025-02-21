@@ -19,9 +19,8 @@ model User {
   name      String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+  post Post[]
 }
-
-
 
 model Incidents{ 
   id   String @id @default(cuid())
@@ -33,3 +32,13 @@ model Incidents{
   coordinates String?
 }
 
+model Post{
+  id String @id @default(cuid())
+  title String?
+  content String?
+  published Boolean @default(false)
+  author User @relation(fields: [authorId], references: [id])
+  authorId String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

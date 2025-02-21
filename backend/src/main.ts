@@ -1,6 +1,7 @@
 import express from "express";
 import cors from 'cors';
 import { userRouter } from "./routes/user";
+import { postRouter } from "./routes/posts";
 const app=express();
 
 
@@ -12,6 +13,7 @@ app.get("/",(req,res)=>{
 });
 
 app.use("/user",userRouter)
+app.use("/posts",postRouter)
 
 app.listen(4000,()=>{   
     console.log("Server is running on port 4000");

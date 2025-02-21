@@ -17,7 +17,7 @@ export default async function DashboardLayout({
   const session= await getUserDetails();
   return (
     <div className="flex h-screen w-full">
-      <SidebarDemo  user={session} children={children} />
+      <SidebarDemo user={session} children={children} />
     </div>
   );
 }

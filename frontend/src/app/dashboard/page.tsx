@@ -8,7 +8,7 @@ import React from 'react'
 const page = () => {
   const {data :session}=useSession();
   return (
-    <div className='p-10 sm:p-6'>
+    <div className='p-4 md:p-2'>
       <LiveLocationMap/>
     </div>
   )

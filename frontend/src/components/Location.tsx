@@ -1,5 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { GoogleMap, Marker, useJsApiLoader, DirectionsRenderer } from "@react-google-maps/api";
+import {
+  GoogleMap,
+  Marker,
+  useJsApiLoader,
+  DirectionsRenderer,
+} from "@react-google-maps/api";
 import ActionSearchBar from "./SearchBar";
 
 const containerStyle = {
@@ -9,9 +14,16 @@ const containerStyle = {
 };
 
 const LiveLocationMap = () => {
-  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
-  const [destination, setDestination] = useState<{ lat: number; lng: number } | null>(null);
-  const [routes, setRoutes] = useState<google.maps.DirectionsResult | null>(null);
+  const [location, setLocation] = useState<{ lat: number; lng: number } | null>(
+    null
+  );
+  const [destination, setDestination] = useState<{
+    lat: number;
+    lng: number;
+  } | null>(null);
+  const [routes, setRoutes] = useState<google.maps.DirectionsResult | null>(
+    null
+  );
   const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
   const [placeName, setPlaceName] = useState<string>("Fetching location...");
 
@@ -20,6 +32,7 @@ const LiveLocationMap = () => {
     libraries: ["places"],
   });
 
+  // Get live location updates
   useEffect(() => {
     if (navigator.geolocation) {
       navigator.geolocation.watchPosition(
@@ -29,7 +42,6 @@ const LiveLocationMap = () => {
             lng: position.coords.longitude,
           };
           setLocation(newLocation);
-          fetchPlaceName(newLocation);
         },
         (error) => {
           console.error("Error getting location: ", error);
@@ -41,19 +53,20 @@ const LiveLocationMap = () => {
     }
   }, []);
 
-  const fetchPlaceName = (latLng: { lat: number; lng: number }) => {
-    if (!isLoaded) return;
-    const geocoder = new google.maps.Geocoder();
-    geocoder.geocode({ location: latLng }, (results:any, status) => {
-      if (status === "OK" && results[0]) {
-        setPlaceName(results[0].formatted_address);
-      } else {
-        console.error("Geocoder failed:", status);
-        setPlaceName("Location not found");
-      }
-    });
-  };
-
+  // Get place name whenever location or script load status changes
+  useEffect(() => {
+    if (location && isLoaded) {
+      const geocoder = new google.maps.Geocoder();
+      geocoder.geocode({ location }, (results, status) => {
+        if (status === "OK" && results?.[0]) {
+          setPlaceName(results[0].formatted_address);
+        } else {
+          console.error("Geocoder failed:", status);
+          setPlaceName("Location not found");
+        }
+      });
+    }
+  }, [location, isLoaded]);
   const handlePlaceSelect = (place: google.maps.places.PlaceResult) => {
     if (place.geometry?.location) {
       const selectedLocation = {
@@ -95,13 +108,21 @@ const LiveLocationMap = () => {
       </div>
 
       {/* Search Bar */}
-      <ActionSearchBar onSelectPlace={handlePlaceSelect} setDestination={setDestination} />
+      <ActionSearchBar
+        onSelectPlace={handlePlaceSelect}
+        setDestination={setDestination}
+      />
 
       {/* Google Map */}
       <GoogleMap mapContainerStyle={containerStyle} center={location} zoom={13}>
         <Marker position={location} />
         {destination && <Marker position={destination} />}
-        {routes && <DirectionsRenderer directions={routes} routeIndex={selectedRouteIndex} />}
+        {routes && (
+          <DirectionsRenderer
+            directions={routes}
+            routeIndex={selectedRouteIndex}
+          />
+        )}
       </GoogleMap>
 
       {/* Display Routes */}
@@ -109,16 +130,18 @@ const LiveLocationMap = () => {
         <div className="border rounded-lg shadow-md p-3 bg-white dark:bg-gray-900">
           <h3 className="text-sm font-medium mb-2">Possible Routes:</h3>
           <ul className="space-y-2">
-            {routes.routes.map((route: any, index: any) => (
+            {routes.routes.map((route: google.maps.DirectionsRoute, index: number) => (
               <li
                 key={index}
                 className={`p-2 cursor-pointer rounded-md ${
-                  selectedRouteIndex === index ? "bg-blue-500 text-white" : "bg-gray-100 dark:bg-gray-800"
+                  selectedRouteIndex === index
+                    ? "bg-blue-500 text-white"
+                    : "bg-gray-100 dark:bg-gray-800"
                 }`}
                 onClick={() => setSelectedRouteIndex(index)}
               >
                 <p className="text-xs">
-                  {route.legs[0].duration.text} ({route.legs[0].distance.text})
+                  {route.legs?.[0]?.duration?.text} ({route.legs?.[0]?.distance?.text})
                 </p>
               </li>
             ))}

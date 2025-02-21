@@ -1,7 +1,7 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-@layer utilities {
+/* @layer utilities {
   .delay-100 {
     animation-delay: 100ms;
   }
@@ -29,7 +29,7 @@
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
- 
+
   .dark {
     --brand: 31 97% 72%;
     --brand-foreground: 27 96% 61%;
@@ -40,7 +40,7 @@
     --sidebar-accent: 240 3.7% 15.9%;
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 }
 
@@ -52,3 +52,23 @@
     @apply bg-white text-black;
   }
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@layer components {
+  .border-border {
+    border: 2px solid #000; /* Customize this according to your needs */
+  /* }
+}
+
+@layer utilities {
+  .outline-ring\/50 {
+    outline: 2px solid rgba(255, 0, 0, 0.5); /* Customize this as needed */
+  

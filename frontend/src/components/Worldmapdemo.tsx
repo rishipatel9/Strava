@@ -7,7 +7,7 @@ export function WorldMapDemo() {
     <div className=" py-40 dark:bg-black bg-white w-full">
       <div className="max-w-7xl mx-auto text-center">
         <p className="font-bold text-xl md:text-4xl dark:text-white text-black">
-          Remote{" "}
+          Around The World{" "}
           <span className="text-neutral-400">
             {"Connectivity".split("").map((word, idx) => (
               <motion.span
@@ -23,9 +23,7 @@ export function WorldMapDemo() {
           </span>
         </p>
         <p className="text-sm md:text-lg text-neutral-500 max-w-2xl mx-auto py-4">
-          Break free from traditional boundaries. Work from anywhere, at the
-          comfort of your own studio apartment. Perfect for Nomads and
-          Travellers.
+          Live Safety Reports and Alerts , Best Routes and Places Suggested to Users , Use our Platform and also Earn Crypto Tokens....
         </p>
       </div>
       <WorldMap

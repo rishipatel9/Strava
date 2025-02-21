@@ -21,7 +21,7 @@ export function SidebarDemo({
   user,
 }: {
   children: React.ReactNode;
-  user: User;
+  user: any;
 }) {
   const links = [
     {

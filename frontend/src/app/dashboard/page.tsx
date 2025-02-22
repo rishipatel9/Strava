@@ -1,13 +1,18 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { MapPin, AlertTriangle, Shield, Navigation, Sun, ThermometerSun } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import LiveLocationMap from '@/components/Location';
+import LocationName from '@/components/LocationName';
+import axios from 'axios';
+import useStore from '@/store/store';
+
 
 const Dashboard = () => {
   const [locationAccess, setLocationAccess] = useState(false);
+  const { location}=useStore((state)=>state)
 
   const requestLocation = () => {
     if ("geolocation" in navigator) {
@@ -17,40 +22,55 @@ const Dashboard = () => {
     }
   };
 
-  if (!locationAccess) {
-    return (
-      <div className="min-h-screen bg-gray-50 p-8">
-        <Card className="max-w-md mx-auto">
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Enable Location Access</CardTitle>
-          </CardHeader>
-          <CardContent className="text-center">
-            <MapPin className="w-16 h-16 mx-auto mb-4 text-blue-500" />
-            <p className="mb-4">To provide you with accurate safety information, we need access to your location.</p>
-            <Button onClick={requestLocation} className='bg-neutral-200'>
-              Share Location
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  const fetchWeather = async () => {
+    try {
+      const response = await axios.get(`http://localhost:6000/weather?location=${location}`);
+      console.log("Weather Data:", response.data);
+    } catch (err) {
+      console.error("Failed to fetch weather:", err);
+    }
+  };
+
+  useEffect(()=>{
+    console.log("Location:",location)
+    fetchWeather();
+  },[location])
+
+
+  // if (!locationAccess) {
+  //   return (
+  //     <div className="min-h-screen bg-gray-50 p-8">
+  //       <Card className="max-w-md mx-auto">
+  //         <CardHeader>
+  //           <CardTitle className="text-xl font-semibold">Enable Location Access</CardTitle>
+  //         </CardHeader>
+  //         <CardContent className="text-center">
+  //           <MapPin className="w-16 h-16 mx-auto mb-4 text-blue-500" />
+  //           <p className="mb-4">To provide you with accurate safety information, we need access to your location.</p>
+  //           <Button onClick={requestLocation} className='bg-neutral-200'>
+  //             Share Location
+  //           </Button>
+  //         </CardContent>
+  //       </Card>
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Travel Safety Dashboard</h1>
-        
-        {/* Main Grid Layout */}
+        <div className="flex items-center justify-between mb-8">
+          <h1 className="text-3xl font-bold">Travel Safety Dashboard</h1>
+          <LocationName />
+        </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-          
-          
+
           {/* Weather Alerts */}
-          <Card>
+          <Card className='shadow-md'>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <ThermometerSun className="w-5 h-5" />
-                Weather Alerts
+                Weather Alerts 
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -65,7 +85,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Crime Statistics */}
-          <Card>
+          <Card className='shadow-md border'>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
@@ -87,7 +107,7 @@ const Dashboard = () => {
           </Card>
 
           {/* Safe Routes */}
-          <Card>
+          <Card className='shadow-md'>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Navigation className="w-5 h-5" />
@@ -113,18 +133,18 @@ const Dashboard = () => {
           </Card>
 
           {/* Map Card */}
-          <Card >
+          <Card className='shadow-md' >
             <CardHeader>
               <CardTitle>Safety Map</CardTitle>
             </CardHeader>
             <CardContent className=" bg-gray-100  ">
-             <LiveLocationMap/>
+              <LiveLocationMap />
             </CardContent>
           </Card>
 
 
           {/* Recent Incidents */}
-          <Card className="lg:col-span-2">
+          <Card className="lg:col-span-2 shadow-md">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />

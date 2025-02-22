@@ -22,6 +22,8 @@ import { Toaster, toast } from 'sonner'
 import Siriwave from 'react-siriwave';
 import ReactSiriwave from "@/components/Strava";
 import LocationName from "@/components/LocationName";
+import useStore from "@/store/store";
+
 
 
 export default function LocalFeed() {
@@ -30,6 +32,7 @@ export default function LocalFeed() {
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
     {}
   );
+  const {locationDetails}=useStore((state)=>state)
 
   const queryClient = useQueryClient();
 
@@ -84,7 +87,10 @@ export default function LocalFeed() {
 
   const postMutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.post(`${BASEURL}/posts/create`, { title: newPost, content: "f" }, {
+      const response = await axios.post(`${BASEURL}/posts/create`, { title: newPost, location:{
+        lat:locationDetails.lat,
+        lang:locationDetails.lng
+      }}, {
         headers: {
           Authorization: `Bearer ${session?.user.id}`,
         },
@@ -92,11 +98,11 @@ export default function LocalFeed() {
       return response;
     },
     onSuccess:()=>{
-      toast.success('post created')
+      toast.success('Post Created Successfully')
       queryClient.invalidateQueries({queryKey:["posts"]})
     },
     onError:()=>{
-      toast.error("Failed")
+      toast.error("Failed to create post")
     }
   })
 
@@ -106,7 +112,7 @@ export default function LocalFeed() {
         <h1 className="text-3xl font-bold text-primary">Local Feed</h1>
         <div className="flex items-center gap-2">
           
-          <MapPin className="text-primary" />
+          {/* <MapPin className="text-primary" /> */}
           <span className="font-semibold text-primary"><LocationName/></span>
         </div>
       </header>
@@ -130,7 +136,7 @@ export default function LocalFeed() {
                     <div className="flex items-center gap-4">
                       <Avatar>
                         <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                        <AvatarFallback>U</AvatarFallback>
+                        <AvatarFallback className="bg-slate-200">{post.author.name[0]}</AvatarFallback>
                       </Avatar>
                       <div className="font-semibold">{post.title}</div>
                     </div>

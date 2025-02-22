@@ -81,12 +81,13 @@ async function getWeather(location) {
   }
 }
 
-app.get("/weather", async (req, res) => {
-  const { location } = req.query;
+app.post("/weather/:location", async (req, res) => {
+  const { location } = req.params;
   console.log(location)
   if (!location) return res.status(400).json({ error: "Location parameter is required" });
 
   const data = await getWeather(location);
+  console.log(data)
   res.json(data);
 });
 

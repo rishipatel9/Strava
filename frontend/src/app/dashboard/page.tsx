@@ -1,18 +1,26 @@
-"use client"
-import React, { useEffect, useState } from 'react';
+"use client";
+import useStore from "@/store/store";
+import React, { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { MapPin, AlertTriangle, Shield, Navigation, Sun, ThermometerSun } from 'lucide-react';
+import {
+  MapPin,
+  AlertTriangle,
+  Shield,
+  Navigation,
+  Sun,
+  ThermometerSun,
+} from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import LiveLocationMap from '@/components/Location';
-import LocationName from '@/components/LocationName';
-import axios from 'axios';
-import useStore from '@/store/store';
-
+import LiveLocationMap from "@/components/Location";
+import LocationName from "@/components/LocationName";
+import axios from "axios";
 
 const Dashboard = () => {
   const [locationAccess, setLocationAccess] = useState(false);
-  const { location } = useStore((state) => state)
+  const { location } = useStore((state) => state);
+  const [Temperature, setTemperature] = useState(0);
+  const [AQI, setAQI] = useState("");
 
   const requestLocation = () => {
     if ("geolocation" in navigator) {
@@ -24,22 +32,51 @@ const Dashboard = () => {
 
   const fetchWeather = async () => {
     try {
-      const response = await axios.get(`http://localhost:6000/weather?location=Mumbai`, {
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      if (!location) {
+        console.log("No location available");
+        return;
+      }
+      
+      console.log("Fetching weather for:", location);
+      const response = await axios.post(
+        `https://present-turtle-painfully.ngrok-free.app/weather/${encodeURIComponent(location)}`,
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
       console.log("Weather Data:", response.data);
+
+      // Set temperature from the response
+      setTemperature(response.data.weather.temperature);
+
+      // Set AQI based on weather description
+      // This is a simple mapping - you might want to adjust based on your needs
+      const descriptionToAQI: { [key: string]: string } = {
+        smoke: "Poor",
+        clear: "Good",
+        clouds: "Moderate",
+        rain: "Moderate",
+        haze: "Poor",
+        mist: "Poor",
+      };
+
+      setAQI(descriptionToAQI[response.data.weather.description] || "Unknown");
     } catch (err) {
       console.error("Failed to fetch weather:", err);
+      setTemperature(0);
+      setAQI("Unknown");
     }
   };
 
-  useEffect(() => {
-    console.log("Location:", location)
+ 
+useEffect(() => {
+  if (location) {
+    console.log("Location updated:", location);
     fetchWeather();
-  }, [location])
-
+  }
+}, [location]);
 
   // if (!locationAccess) {
   //   return (
@@ -70,18 +107,20 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {/* Weather Alerts */}
           <Card className="shadow-md rounded-xl bg-yellow-200 overflow-hidden">
-            <CardHeader className='rounded-xl '>
+            <CardHeader className="rounded-xl ">
               <CardTitle className="flex items-center gap-2">
                 <ThermometerSun className="w-5 h-5" />
                 Weather Alerts
               </CardTitle>
             </CardHeader>
-            <CardContent className='bg-yellow-100 ronded-xl'>
+            <CardContent className="bg-yellow-100 ronded-xl">
               <Alert className="mb-4">
                 <Sun className="w-4 h-4" />
-                <AlertTitle>High Temperature Warning</AlertTitle>
+                <AlertTitle>Current Weather</AlertTitle>
                 <AlertDescription>
-                  Expected temperature of 95°F (35°C)
+                  Temperature: {Temperature}°C
+                  <br />
+                  Air Quality: {AQI}
                 </AlertDescription>
               </Alert>
             </CardContent>
@@ -89,13 +128,13 @@ const Dashboard = () => {
 
           {/* Crime Statistics */}
           <Card className="shadow-md bg-blue-200   rounded-xl">
-            <CardHeader className='bg-blue-200  rounded-xl'>
+            <CardHeader className="bg-blue-200  rounded-xl">
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
                 Crime Statistics
               </CardTitle>
             </CardHeader>
-            <CardContent className='bg-blue-100'>
+            <CardContent className="bg-blue-100">
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Safety Score</span>
@@ -111,13 +150,13 @@ const Dashboard = () => {
 
           {/* Safe Routes */}
           <Card className="shadow-md bg-green-200 rounded-xl">
-            <CardHeader className='rounded-xl'>
+            <CardHeader className="rounded-xl">
               <CardTitle className="flex items-center gap-2">
                 <Navigation className="w-5 h-5" />
                 Recommended Routes
               </CardTitle>
             </CardHeader>
-            <CardContent className='bg-green-100'>
+            <CardContent className="bg-green-100">
               <div className="space-y-2">
                 <Alert className="">
                   <AlertTitle>Primary Route</AlertTitle>
@@ -136,7 +175,7 @@ const Dashboard = () => {
           </Card>
 
           <Card className="shadow-md bg-gray-200 rounded-xl overflow-hidden">
-            <CardHeader className='rounded-xl'>
+            <CardHeader className="rounded-xl">
               <CardTitle>Safety Map & Recommended Routes</CardTitle>
             </CardHeader>
             <CardContent className="bg-gray-100">
@@ -152,7 +191,7 @@ const Dashboard = () => {
                 Recent Incidents
               </CardTitle>
             </CardHeader>
-            <CardContent className='bg-pink-100'>
+            <CardContent className="bg-pink-100">
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <Alert key={i} className="bg-gray-50">
@@ -166,11 +205,9 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
-
         </div>
       </div>
     </div>
-
   );
 };
 

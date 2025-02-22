@@ -6,6 +6,7 @@ import {
   DirectionsRenderer,
 } from "@react-google-maps/api";
 import ActionSearchBar from "./SearchBar";
+import useStore from "@/store/store";
 
 const containerStyle = {
   width: "100%",
@@ -26,6 +27,7 @@ const LiveLocationMap = () => {
   );
   const [selectedRouteIndex, setSelectedRouteIndex] = useState<number>(0);
   const [placeName, setPlaceName] = useState<string>("Fetching location...");
+  const {setUserExactLocation}=useStore((state)=>state)
 
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
@@ -60,6 +62,7 @@ const LiveLocationMap = () => {
       geocoder.geocode({ location }, (results, status) => {
         if (status === "OK" && results?.[0]) {
           setPlaceName(results[0].formatted_address);
+          setUserExactLocation(results[0].formatted_address);
         } else {
           console.error("Geocoder failed:", status);
           setPlaceName("Location not found");
@@ -100,13 +103,12 @@ const LiveLocationMap = () => {
   };
 
   return isLoaded && location ? (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 ">
       {/* Display Current Place Name */}
-      <div className="p-3 bg-gray-100 dark:bg-gray-800 rounded-lg shadow-md">
+      {/* <div className="p-3  dark:bg-gray-800 rounded-lg shadow-md">
         <h3 className="text-sm font-semibold">Your Location:</h3>
         <p className="text-sm text-gray-700 dark:text-gray-300">{placeName}</p>
-      </div>
-
+      </div> */}
       {/* Search Bar */}
       <ActionSearchBar
         onSelectPlace={handlePlaceSelect}

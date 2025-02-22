@@ -50,9 +50,9 @@ const ActionSearchBar = ({ onSelectPlace, setDestination }: ActionSearchBarProps
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto">
-      <div className="relative">
-        <div className="w-full max-w-sm sticky top-0 bg-background z-10 pt-4 pb-1">
+    <div className="w-full border-t  ">
+      <div className="relative w-full">
+        <div className="w-full sticky top-0 bg-background z-10 pt-4 pb-1">
           <label className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-1 block" htmlFor="search">
             Search Location
           </label>
@@ -62,9 +62,10 @@ const ActionSearchBar = ({ onSelectPlace, setDestination }: ActionSearchBarProps
               placeholder="Search for a place..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="pl-3 pr-9 py-2 text-sm rounded-lg"
+              className="pl-3 pr-9 py-2 text-sm rounded-lg w-full"
             />
             <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-500" />
+            
 
             <AnimatePresence>
               {suggestions.length > 0 && (

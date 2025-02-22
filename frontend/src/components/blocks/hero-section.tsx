@@ -24,7 +24,7 @@ export const HeroSectionDemo = () => {
           </h1>
           <Button variant="default">
             <Link href="/auth/signup">
-              <span className="font-semibold text-sm md:text-lg text-white">
+              <span className=" text-white">
                 Signup
               </span>
             </Link>

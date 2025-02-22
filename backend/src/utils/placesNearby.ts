@@ -1,6 +1,6 @@
 const axios = require("axios");
 
-const apiKey = "AIzaSyBQIFF6QgABS5t9Qi4fwznwOh7Vbe8HOCc"; // Google API Key
+const apiKey =process.env.GOOGLE_MAPS_API_KEY ; // Google API Key
 
 export async function fetchNearbyPlaces(location:any, purpose:any) {
   try {

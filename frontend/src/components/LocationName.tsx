@@ -26,7 +26,7 @@ const LocationName = () => {
           setError(null); 
           setLocationDetails({
             lat: position.coords.latitude.toString(),
-            lng: position.coords.longitude.toString()
+            lang: position.coords.longitude.toString()
           })
         },
         (err) => {

@@ -82,42 +82,54 @@ postRouter.get("/", authenticateUser, async (req: any, res: any) => {
     });
   }
 });
+function getDistance(lat1: number, lon1: number, lat2: number, lon2: number) {
+  const R = 6371; // Earth's radius in km
+  const dLat = (lat2 - lat1) * (Math.PI / 180);
+  const dLon = (lon2 - lon1) * (Math.PI / 180);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * (Math.PI / 180)) *
+      Math.cos(lat2 * (Math.PI / 180)) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c; 
+}
+type  PostLocation = {
+  lat: number;
+  lang: number;
+};
 postRouter.get("/getall", authenticateUser, async (req: any, res: any) => {
   try {
+    const { latitude, longitude } = req.query;
+
+    if (!latitude || !longitude) {
+      return res.status(400).json({
+        statusCode: 400,
+        message: "Latitude and longitude are required.",
+      });
+    }
+
     const posts = await prisma.post.findMany({
       include: {  
-        author: {
-          select: {
-            id: true,
-            name: true,
-            email: true
-          }
-        },
-        likes: { 
-          select: { 
-            user: true 
-          } 
-        }, 
-        comments: {
-          select: {
-            id: true,
-            createdAt: true,
-            user: { 
-              select: { 
-                id: true, 
-                name: true, 
-                email: true 
-              } 
-            },
-          },
-        },
+        author: { select: { id: true, name: true, email: true } },
+        likes: { select: { user: true } },
+        comments: { select: { id: true, createdAt: true, user: { select: { id: true, name: true, email: true } } } },
       },
+    });
+
+    const filteredPosts = posts.filter(post => {
+      const { lat, lang } = post?.location as PostLocation; 
+      console.log(lat, lang);
+      return getDistance(latitude, longitude, lat, lang) <= 10;
     });
 
     res.status(200).json({
       statusCode: 200,
       message: "Posts fetched successfully",
-      data: posts,
+      data: filteredPosts,
     });
   } catch (error) {
     console.error("Error fetching posts:", error);
@@ -127,6 +139,7 @@ postRouter.get("/getall", authenticateUser, async (req: any, res: any) => {
     });
   }
 });
+
 
 
 

@@ -103,7 +103,7 @@ const LiveLocationMap = () => {
   };
 
   return isLoaded && location ? (
-    <div className="flex flex-col gap-4 ">
+    <div className="flex flex-col gap-4 border-none ">
       {/* Display Current Place Name */}
       {/* <div className="p-3  dark:bg-gray-800 rounded-lg shadow-md">
         <h3 className="text-sm font-semibold">Your Location:</h3>

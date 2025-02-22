@@ -8,12 +8,12 @@ interface State {
     userExactLocatiom :string
     locationDetails :{
         lat:string;
-        lng:string;
+        lang:string;
     }
     setName : (name : string) => void;
     setUserLocation : (location : string) => void;
     setUserExactLocation : (location : string) => void;
-    setLocationDetails : (locationDetails : {lat:string,lng:string}) => void;
+    setLocationDetails : (locationDetails : {lat:string,lang:string}) => void;
 }
 
 const useStore = create(
@@ -24,12 +24,12 @@ const useStore = create(
         userExactLocatiom:"",
         locationDetails:{
             lat:"",
-            lng:""
+            lang:""
         },
         setName: (name : string) => set({ name }),
         setUserLocation: (location : string) => set({ location }),
         setUserExactLocation: (userExactLocatiom : string) => set({ userExactLocatiom }),
-        setLocationDetails: (locationDetails : {lat:string,lng:string}) => set({ locationDetails }),
+        setLocationDetails: (locationDetails : {lat:string,lang:string}) => set({ locationDetails }),
     }),    
     {
       name: "Store",

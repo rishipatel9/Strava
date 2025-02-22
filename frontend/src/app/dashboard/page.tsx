@@ -12,7 +12,7 @@ import useStore from '@/store/store';
 
 const Dashboard = () => {
   const [locationAccess, setLocationAccess] = useState(false);
-  const { location}=useStore((state)=>state)
+  const { location } = useStore((state) => state)
 
   const requestLocation = () => {
     if ("geolocation" in navigator) {
@@ -24,17 +24,21 @@ const Dashboard = () => {
 
   const fetchWeather = async () => {
     try {
-      const response = await axios.get(`http://localhost:6000/weather?location=${location}`);
+      const response = await axios.get(`http://localhost:6000/weather?location=Mumbai`, {
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
       console.log("Weather Data:", response.data);
     } catch (err) {
       console.error("Failed to fetch weather:", err);
     }
   };
 
-  useEffect(()=>{
-    console.log("Location:",location)
+  useEffect(() => {
+    console.log("Location:", location)
     fetchWeather();
-  },[location])
+  }, [location])
 
 
   // if (!locationAccess) {
@@ -66,14 +70,14 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
 
           {/* Weather Alerts */}
-          <Card className='shadow-md'>
-            <CardHeader>
+          <Card className="shadow-md rounded-xl bg-yellow-200 overflow-hidden">
+            <CardHeader className='rounded-xl '>
               <CardTitle className="flex items-center gap-2">
                 <ThermometerSun className="w-5 h-5" />
-                Weather Alerts 
+                Weather Alerts
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='bg-yellow-100 ronded-xl'>
               <Alert className="mb-4">
                 <Sun className="w-4 h-4" />
                 <AlertTitle>High Temperature Warning</AlertTitle>
@@ -85,14 +89,14 @@ const Dashboard = () => {
           </Card>
 
           {/* Crime Statistics */}
-          <Card className='shadow-md border'>
-            <CardHeader>
+          <Card className="shadow-md bg-blue-200   rounded-xl">
+            <CardHeader className='bg-blue-200  rounded-xl'>
               <CardTitle className="flex items-center gap-2">
                 <Shield className="w-5 h-5" />
                 Crime Statistics
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='bg-blue-100'>
               <div className="space-y-4">
                 <div className="flex justify-between items-center">
                   <span>Safety Score</span>
@@ -107,22 +111,22 @@ const Dashboard = () => {
           </Card>
 
           {/* Safe Routes */}
-          <Card className='shadow-md'>
+          <Card className="shadow-md bg-green-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Navigation className="w-5 h-5" />
                 Recommended Routes
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='bg-green-100'>
               <div className="space-y-2">
-                <Alert className="bg-green-50">
+                <Alert className="">
                   <AlertTitle>Primary Route</AlertTitle>
                   <AlertDescription>
                     Via Main Street - Safest option
                   </AlertDescription>
                 </Alert>
-                <Alert className="bg-yellow-50">
+                <Alert className="bg-yellow-200">
                   <AlertTitle>Alternative Route</AlertTitle>
                   <AlertDescription>
                     Via Cedar Road - Moderate safety
@@ -132,26 +136,24 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          {/* Map Card */}
-          <Card className='shadow-md' >
+          <Card className="shadow-md bg-gray-200">
             <CardHeader>
-              <CardTitle>Safety Map</CardTitle>
+              <CardTitle>Safety Map & Recommended Routes</CardTitle>
             </CardHeader>
-            <CardContent className=" bg-gray-100  ">
+            <CardContent className="bg-gray-100">
               <LiveLocationMap />
             </CardContent>
           </Card>
 
-
           {/* Recent Incidents */}
-          <Card className="lg:col-span-2 shadow-md">
+          <Card className="lg:col-span-2 shadow-md bg-pink-200">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <AlertTriangle className="w-5 h-5" />
                 Recent Incidents
               </CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className='bg-pink-100'>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
                   <Alert key={i} className="bg-gray-50">
@@ -165,9 +167,11 @@ const Dashboard = () => {
               </div>
             </CardContent>
           </Card>
+
         </div>
       </div>
     </div>
+
   );
 };
 

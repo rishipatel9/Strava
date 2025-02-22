@@ -18,14 +18,14 @@ const server = http.createServer(app);
 //   .catch((err) => {
 //     console.log(err);
 //   });
-
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: "http://localhost:3000", // Allow requests from your Next.js frontend
     methods: ["GET", "POST"],
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
+
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
@@ -83,6 +83,7 @@ async function getWeather(location) {
 
 app.get("/weather", async (req, res) => {
   const { location } = req.query;
+  console.log(location)
   if (!location) return res.status(400).json({ error: "Location parameter is required" });
 
   const data = await getWeather(location);

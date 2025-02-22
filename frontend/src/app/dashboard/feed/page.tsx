@@ -40,7 +40,7 @@ export default function LocalFeed() {
   const { data, isLoading } = useQuery({
     queryKey: ["posts"],
     queryFn: async () => {
-      const response = await axios.get(`${BASEURL}/posts/getall`, {
+      const response = await axios.get(`${BASEURL}/posts/getall?latitude=${locationDetails.lat}&longitude=${locationDetails.lang}`, {
         headers: {
           Authorization: `Bearer ${session?.user.id}`,
         },
@@ -89,7 +89,7 @@ export default function LocalFeed() {
     mutationFn: async () => {
       const response = await axios.post(`${BASEURL}/posts/create`, { title: newPost, location:{
         lat:locationDetails.lat,
-        lang:locationDetails.lng
+        lang:locationDetails.lang
       }}, {
         headers: {
           Authorization: `Bearer ${session?.user.id}`,

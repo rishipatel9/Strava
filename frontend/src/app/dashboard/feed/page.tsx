@@ -23,16 +23,18 @@ import Siriwave from 'react-siriwave';
 import ReactSiriwave from "@/components/Strava";
 import LocationName from "@/components/LocationName";
 import useStore from "@/store/store";
-
+import { format } from "date-fns";
+import { MarqueeDemo } from "@/components/magicui/MarqueeDemo";
 
 
 export default function LocalFeed() {
   const { data: session } = useSession();
   const [newPost, setNewPost] = useState("");
+  const [description, setDescription] = useState("");
   const [commentInputs, setCommentInputs] = useState<{ [key: string]: string }>(
     {}
   );
-  const {locationDetails}=useStore((state)=>state)
+  const { locationDetails } = useStore((state) => state)
 
   const queryClient = useQueryClient();
 
@@ -63,7 +65,7 @@ export default function LocalFeed() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey:["posts"]}); 
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 
@@ -81,142 +83,121 @@ export default function LocalFeed() {
       );
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({queryKey:["posts"]}); // Refresh posts
+      queryClient.invalidateQueries({ queryKey: ["posts"] }); // Refresh posts
     },
   });
 
   const postMutation = useMutation({
     mutationFn: async () => {
-      const response = await axios.post(`${BASEURL}/posts/create`, { title: newPost, location:{
-        lat:locationDetails.lat,
-        lang:locationDetails.lang
-      }}, {
+      const response = await axios.post(`${BASEURL}/posts/create`, {
+        title: newPost, content: description, location: {
+          lat: locationDetails.lat,
+          lang: locationDetails.lang
+        }
+      }, {
         headers: {
           Authorization: `Bearer ${session?.user.id}`,
         },
       });
       return response;
     },
-    onSuccess:()=>{
+    onSuccess: () => {
       toast.success('Post Created Successfully')
-      queryClient.invalidateQueries({queryKey:["posts"]})
+      queryClient.invalidateQueries({ queryKey: ["posts"] })
     },
-    onError:()=>{
+    onError: () => {
       toast.error("Failed to create post")
     }
   })
 
   return (
-    <div className="max-w-3xl mx-auto p-4 space-y-6">
-      <header className="flex items-center justify-between mb-6">
-        <h1 className="text-3xl font-bold text-primary">Local Feed</h1>
-        <div className="flex items-center gap-2">
-          
-          {/* <MapPin className="text-primary" /> */}
-          <span className="font-semibold text-primary"><LocationName/></span>
-        </div>
+    <div className=" mx-auto p-6 space-y-6">
+      {/* Header */}
+      <header className="flex items-center justify-between">
+        <h1 className="text-4xl font-bold text-primary">Local Feed</h1>
       </header>
-      <ReactSiriwave/>
+
+      <MarqueeDemo />
 
       <Tabs defaultValue="feed" className="w-full">
-        <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="feed">Feed</TabsTrigger>
-          <TabsTrigger value="create">Create Post</TabsTrigger>
+        <TabsList className="grid w-full grid-cols-2 bg-gray-100 rounded-lg p-1">
+          <TabsTrigger value="feed" className="text-lg font-medium">Feed</TabsTrigger>
+          <TabsTrigger value="create" className="text-lg font-medium">Create Post</TabsTrigger>
         </TabsList>
 
         {/* Feed Section */}
         <TabsContent value="feed">
-          <ScrollArea className="h-[calc(100vh-200px)]">
+          <ScrollArea className="h-[calc(100vh-250px)] space-y-4">
             {isLoading ? (
-              <p>Loading posts...</p>
+              <div className="flex justify-center items-center py-10">
+                <p className="animate-pulse text-gray-500">Loading posts...</p>
+              </div>
             ) : (
-              data?.map((post: any) => (
-                <Card key={post.id} className="mb-4">
+              data.map((post:any) => (
+                <Card key={post.id} className="p-5  border-b shadow-sm rounded-xl">
                   <CardHeader>
                     <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src="/placeholder.svg?height=40&width=40" alt="User" />
-                        <AvatarFallback className="bg-slate-200">{post.author.name[0]}</AvatarFallback>
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src="/placeholder.svg?height=40&width=40" alt={post.author.name} />
+                        <AvatarFallback className="bg-gray-300 text-gray-700">
+                          {post.author.name[0]}
+                        </AvatarFallback>
                       </Avatar>
-                      <div className="font-semibold">{post.title}</div>
+                      <div>
+                        <h3 className="font-semibold text-lg">{post.author.name}</h3>
+                        <p className="text-sm text-gray-500">
+                          {format(new Date(post.createdAt), "MMM d, yyyy h:mm a")}
+                        </p>
+                      </div>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p>{post.content}</p>
+                    <p className="text-gray-700 text-sm leading-relaxed">{post.title || "No content available."}</p>
                   </CardContent>
-                  <CardFooter className="flex items-center gap-4">
-                    <Button
-                      variant="ghost"
-                      onClick={() => likeMutation.mutate(post.id)}
-                    >
-                      <Heart className="text-red-500" /> {post.likes.length}
-                    </Button>
-
-                    <Button
-                      variant="ghost"
-                      onClick={() => setCommentInputs((prev) => ({
-                        ...prev,
-                        [post.id]: prev[post.id] ? "" : "",
-                      }))}
-                    >
-                      <MessageCircle /> {post.comments.length}
-                    </Button>
-                  </CardFooter>
-
-                  {/* Comment Input */}
-                  {commentInputs[post.id] !== undefined && (
-                    <div className="p-4">
-                      <Input
-                        placeholder="Add a comment..."
-                        value={commentInputs[post.id] || ""}
-                        onChange={(e) =>
-                          setCommentInputs((prev) => ({
-                            ...prev,
-                            [post.id]: e.target.value,
-                          }))
-                        }
-                      />
-                      <Button
-                        className="mt-2"
-                        onClick={() =>
-                          commentMutation.mutate({
-                            postId: post.id,
-                            comment: commentInputs[post.id],
-                          })
-                        }
-                      >
-                        <Send className="mr-2" /> Send
-                      </Button>
-                    </div>
-                  )}
                 </Card>
               ))
             )}
           </ScrollArea>
         </TabsContent>
+
+        {/* Create Post Section */}
         <TabsContent value="create">
-          <Card>
-            <CardContent className="pt-6">
+          <Card className="shadow-md p-5 rounded-xl">
+            <CardContent>
               <div className="flex flex-col gap-4">
+                {/* User Info */}
                 <div className="flex items-center gap-4">
-                  <Avatar>
+                  <Avatar className="w-12 h-12">
                     <AvatarImage src="/placeholder.svg?height=40&width=40" alt="Current User" />
-                    <AvatarFallback>CU</AvatarFallback>
+                    <AvatarFallback className="bg-gray-300 text-gray-700">CU</AvatarFallback>
                   </Avatar>
-                  <div className="font-semibold">Current User</div>
+                  <h3 className="font-semibold text-lg">Current User</h3>
                 </div>
-                <Textarea
-                  placeholder="What's happening in your area?"
+
+                {/* Input Fields */}
+                <Input
+                  placeholder="Give your post a title..."
                   value={newPost}
                   onChange={(e) => setNewPost(e.target.value)}
-                  className="min-h-[100px]"
+                  className="border border-gray-300 p-3 rounded-lg"
                 />
-                <Button className="self-end" onClick={()=>postMutation.mutate()}>Post</Button>
+                <Textarea
+                  placeholder="Write about what's happening in your area..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="border border-gray-300 p-3 rounded-lg"
+                />
+
+                {/* Post Button */}
+                <Button className="self-end bg-primary hover:bg-primary-dark transition-all">
+                  Post
+                </Button>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+
       <Toaster />
     </div>
   );

@@ -40,10 +40,11 @@ function Page() {
   const [uploadedImageUrl, setUploadedImageUrl] = useState<string | null>(null);
   const [claiming, setClaiming] = useState(false);
   const { publicKey, connected } = useWallet();
-
   const [detectedClass, setDetectedClass] = useState<string | null>(null);
   const [confidence, setConfidence] = useState<number | null>(null);
   const [showModal, setShowModal] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [isClaimed, setIsClaimed] = useState(false);
 
   const user_id = session?.user.id;
 
@@ -71,6 +72,20 @@ function Page() {
     },
   });
 
+  const AlertMutation = useMutation({
+    mutationFn: async (alert:any) => {
+      await axios.post(`/api/emergency`, {
+        eventType :alert.type,
+        location: alert.location,
+        numbers: alert.numbers
+      }, {
+        headers: { Authorization: `Bearer ${session?.user.id}` },
+      });
+    },
+  });
+
+  // Track image verification status
+
   const handleFileUpload = async (files: File[]) => {
     if (!files.length) return;
     const file = files[0];
@@ -80,26 +95,25 @@ function Page() {
     try {
       // Verify the file
       const { data: verifyData } = await axios.post(
-        "http://127.0.0.1:5000/verify-incident",
+        "http://logical-witty-ocelot.ngrok-free.app/verify-incident",
         verifyFormData,
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       console.log("Verify Response:", verifyData);
 
       if (!verifyData.verified) {
+        setIsVerified(false); // Reset verification flag
         return toast.error("File verification failed. Upload aborted.");
       }
+
       setDetectedClass(verifyData.className);
       setConfidence(verifyData.confidence);
       setShowModal(true);
+      setIsVerified(true); // Set verification flag to true
 
-      // Upload to Cloudinary
       const cloudFormData = new FormData();
       cloudFormData.append("file", file);
-      cloudFormData.append(
-        "upload_preset",
-        "strava"
-      );
+      cloudFormData.append("upload_preset", "strava");
       cloudFormData.append("api_key", process.env.NEXT_PUBLIC_CLOUDINARY_API_KEY || "");
 
       const loadingToastId = toast.loading("Uploading file to Cloudinary...");
@@ -109,7 +123,6 @@ function Page() {
         { headers: { "Content-Type": "multipart/form-data" } }
       );
       toast.success("File uploaded successfully!");
-      console.log("Uploaded Image URL:", cloudData.secure_url);
       setUploadedImageUrl(cloudData.secure_url);
       toast.dismiss(loadingToastId);
     } catch (error: any) {
@@ -118,6 +131,7 @@ function Page() {
     }
   };
 
+
   const handleSubmit = async () => {
     if (!title || !description) {
       return toast.error("Please provide a title and description.");
@@ -125,8 +139,19 @@ function Page() {
     if (!uploadedImageUrl) {
       return toast.error("Please upload and verify an image first.");
     }
+    if (!detectedClass) {
+      return toast.error("Please verify the uploaded image before submitting.");
+    }
+    if (!connected && isClaimed) {
+      return toast.error("Please connect your Phantom wallet first.");
+    }
+
+    // Show loading toast
+    const loadingToastId = toast.loading("Submitting incident and claiming rewards...");
+
     try {
-      incidentMutation.mutate({
+      // Submit incident
+      await incidentMutation.mutateAsync({
         title,
         description,
         imageUrl: uploadedImageUrl,
@@ -134,49 +159,140 @@ function Page() {
         longitude: "0.0",
         user_id,
       });
+
+      await 
       console.log("Incident submitted successfully!");
       toast.success("Incident report submitted successfully!");
+
+      if (isClaimed) {
+        await claimCryptoRewards();
+      }
+
+      setTitle("");
+      setDescription("");
+      setUploadedImageUrl(null);
+      setDetectedClass(null);
     } catch (error: any) {
-      console.error("Error submitting incident:", error);
-      toast.error("Failed to submit incident report.");
+      console.error("Error during submission:", error);
+      toast.error("Failed to submit incident or claim rewards.");
+    } finally {
+      toast.dismiss(loadingToastId);
     }
   };
 
-  // claimCryptoRewards remains unchanged.
-  // ...
+
+  const claimCryptoRewards = async () => {
+    if (!connected) {
+      toast.error("Please connect your Phantom wallet first.");
+      return;
+    }
+
+    console.log("Receiver Public Key:", publicKey?.toBase58());
+
+    const base58PrivateKey = process.env.NEXT_PUBLIC_PHANTOM_PRIVATE_KEY || "";
+    const senderKeyPair = Keypair.fromSecretKey(bs58.decode(base58PrivateKey));
+
+    try {
+      setClaiming(true);
+
+      // Show a loading toast
+      const loadingToastId = toast.loading("Processing transaction...");
+
+      const connection = new Connection(clusterApiUrl("devnet"));
+
+      if (!publicKey) {
+        toast.error("Failed to get public key from wallet.");
+        toast.dismiss(loadingToastId);
+        return;
+      }
+
+      // Check sender's balance
+      const senderBalance = await connection.getBalance(senderKeyPair.publicKey);
+      console.log("Sender Balance:", senderBalance);
+
+      if (senderBalance < 10000) {
+        toast.error("Sender account has insufficient funds.");
+        toast.dismiss(loadingToastId);
+        return;
+      }
+
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey: senderKeyPair.publicKey,
+          toPubkey: publicKey,
+          lamports: 100000,
+        })
+      );
+
+      console.log(transaction);
+
+      const signature = await sendAndConfirmTransaction(connection, transaction, [senderKeyPair]);
+
+      toast.success(`Claim successful! TX: ${signature}`);
+      toast.dismiss(loadingToastId);
+    } catch (error) {
+      console.error(error);
+      toast.error("Failed to claim rewards.");
+    } finally {
+      setClaiming(false);
+    }
+  };
 
   return (
-    <div className="w-full max-w-4xl mx-auto min-h-96 border border-dashed bg-white dark:bg-black border-neutral-200 dark:border-neutral-800 rounded-lg p-6 space-y-4">
-      <Input
-        placeholder="Enter incident title..."
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full"
-      />
-      <Input
-        placeholder="Enter incident description..."
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-        className="w-full"
-      />
-      <FileUpload onChange={handleFileUpload} />
-      <Toaster />
-      <Button className="w-full" onClick={handleSubmit}>
-        Submit
-      </Button>
-      {!connected ? (
-        <WalletMultiButton className="w-full mt-4" />
-      ) : (
-        <>
-          <Button className="w-full mt-4" /* onClick={claimCryptoRewards} */ disabled={claiming}>
-            {claiming ? "Claiming..." : "Claim Crypto Rewards"}
-          </Button>
-          <WalletDisconnectButton className="w-full mt-4" />
-        </>
+    <div className="w-full max-w-3xl mx-auto min-h-96 border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-black rounded-xl p-8 space-y-6 shadow-lg">
+      <h2 className="text-2xl font-bold text-center">Report an Incident</h2>
+
+      <div className="space-y-4">
+        <Input
+          placeholder="Incident Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          className="w-full"
+        />
+        <Input
+          placeholder="Incident Description"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+          className="w-full"
+        />
+        <div className="flex items-center space-x-3">
+          <input
+            type="checkbox"
+            id="claim"
+            checked={isClaimed}
+            onChange={() => setIsClaimed(!isClaimed)}
+            className="h-5 w-5 rounded-md border-gray-300 text-blue-600 focus:ring-blue-500"
+          />
+          <label htmlFor="claim" className="text-sm font-medium">Claim Crypto Rewards</label>
+        </div>
+        <FileUpload onChange={handleFileUpload} />
+      </div>
+
+      {/* Wallet Connect Button */}
+      {isClaimed && (
+        <div className="flex justify-center">
+          {!connected ? (
+            <WalletMultiButton className="mt-4 w-full" />
+          ) : (
+            <WalletDisconnectButton className="mt-4 w-full" />
+          )}
+        </div>
       )}
+
+      <Button
+        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-semibold py-2 rounded-lg transition"
+        onClick={handleSubmit}
+        disabled={!isVerified || !uploadedImageUrl}
+      >
+        Submit Report
+      </Button>
+
+      <Toaster />
+
+      {/* Modal for File Verification */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+          <div className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg max-w-sm">
             <div className="flex items-center space-x-2">
               <span className="text-green-500 text-2xl">✔️</span>
               <h3 className="text-xl font-bold">File Verified!</h3>
@@ -194,7 +310,7 @@ function Page() {
                 </span>
               </p>
             )}
-            <Button className="mt-4" onClick={() => setShowModal(false)}>
+            <Button className="mt-4 w-full bg-gray-700 hover:bg-gray-800 text-white" onClick={() => setShowModal(false)}>
               Close
             </Button>
           </div>

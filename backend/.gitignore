@@ -13,11 +13,11 @@ dist
 .gitignore
 # testing
 /coverage
-
+..wwebjs_auth
 # next.js
 /.next/
 /out/
-
+session
 # production
 /build
 node_modules

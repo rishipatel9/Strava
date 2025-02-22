@@ -2,18 +2,35 @@ import React, { useState, useEffect } from "react";
 import { useJsApiLoader } from "@react-google-maps/api";
 import { MapPin, LoaderCircle, AlertTriangle } from "lucide-react";
 import useStore from "@/store/store";
+import axios from "axios";
+import { BASEURL } from "@/utils/constants";
+import { useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
 
 const LocationName = () => {
   const [location, setLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [placeName, setPlaceName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const { setUserLocation, userExactLocatiom, setLocationDetails} = useStore((state) => state);
-
+  const { setUserLocation, userExactLocatiom, setLocationDetails,locationDetails } = useStore((state) => state);
+  const { data: session } = useSession()
   const { isLoaded } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY || "",
     libraries: ["places"],
   });
-
+  const { data: locationData } = useQuery({
+    queryKey: ["locationDetails",locationDetails],
+    queryFn: async () => {
+      const response = await axios.post(`${BASEURL}/user/update/location`, {
+        latitude: location?.lat,
+        longitude: location?.lng
+      }, {
+        headers: {
+          "Authorization": `Bearer ${session?.user.id}`
+        }
+      })
+      return response.data;
+    }
+  })
   // Get live location updates
   useEffect(() => {
     if (navigator.geolocation) {
@@ -23,7 +40,7 @@ const LocationName = () => {
             lat: position.coords.latitude,
             lng: position.coords.longitude,
           });
-          setError(null); 
+          setError(null);
           setLocationDetails({
             lat: position.coords.latitude.toString(),
             lang: position.coords.longitude.toString()
@@ -72,7 +89,7 @@ const LocationName = () => {
       ) : placeName ? (
         <div className="relative group flex items-center gap-2">
           <MapPin className="w-5 h-5 text-blue-500" />
-          <p className="text-sm text-gray-800 dark:text-gray-200 cursor-pointer">
+          <p className="text-md font-semibold text-gray-800 dark:text-gray-200 cursor-pointer">
             {placeName}
           </p>
 

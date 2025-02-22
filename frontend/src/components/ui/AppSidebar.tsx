@@ -6,7 +6,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import Image from "next/image";
 import { cn } from "@/lib/utils";
-import { ClipboardPlus, Home } from "lucide-react";
+import { Bot, ClipboardPlus, Home, MessageCircleCode, Settings } from "lucide-react";
 import Profile from "../comp-377";
 
 interface User {
@@ -42,12 +42,26 @@ export function SidebarDemo({
       label: "Feed",
       href: "/dashboard/feed",
       icon: (
-        <IconSettings className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+        <MessageCircleCode  className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Assistant",
+      href: "http://localhost:5173",
+      icon: (
+        <Bot  className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
+      ),
+    },
+    {
+      label: "Settings",
+      href: "/dashboard/settings",
+      icon: (
+        <Settings  className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),
     },
     {
       label: "Logout",
-      href: "/",
+      href: "",
       icon: (
         <IconArrowLeft className="text-neutral-700 dark:text-neutral-200 h-5 w-5 flex-shrink-0" />
       ),

@@ -29,7 +29,7 @@ export default function RootLayout({
     <html lang="en">
       <body>
         <Suspense fallback={null}>
-          <Providers>{children}</Providers>/
+          <Providers>{children}</Providers>
         </Suspense>
       </body>
     </html>

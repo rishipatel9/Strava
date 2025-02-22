@@ -1,8 +1,10 @@
 "use client";
+
 import React, { useState } from "react";
 import { FileUpload } from "@/components/ui/file-upload";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast, Toaster } from "sonner";
 import {
   Connection,
@@ -205,8 +207,8 @@ function Page() {
 export default function App() {
   const wallets = [new PhantomWalletAdapter()];
   return (
-    <ConnectionProvider endpoint={clusterApiUrl("devnet")}>
-      <WalletProvider wallets={wallets} autoConnect>
+    <ConnectionProvider endpoint="https://api.devnet.solana.com">
+      <WalletProvider wallets={[new PhantomWalletAdapter()]} autoConnect>
         <WalletModalProvider>
           <Page />
         </WalletModalProvider>

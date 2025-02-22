@@ -67,8 +67,7 @@ const Dashboard = () => {
           <h1 className="text-3xl font-bold">Travel Safety Dashboard</h1>
           <LocationName />
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-6">
-
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
           {/* Weather Alerts */}
           <Card className="shadow-md rounded-xl bg-yellow-200 overflow-hidden">
             <CardHeader className='rounded-xl '>
@@ -111,8 +110,8 @@ const Dashboard = () => {
           </Card>
 
           {/* Safe Routes */}
-          <Card className="shadow-md bg-green-200">
-            <CardHeader>
+          <Card className="shadow-md bg-green-200 rounded-xl">
+            <CardHeader className='rounded-xl'>
               <CardTitle className="flex items-center gap-2">
                 <Navigation className="w-5 h-5" />
                 Recommended Routes
@@ -136,8 +135,8 @@ const Dashboard = () => {
             </CardContent>
           </Card>
 
-          <Card className="shadow-md bg-gray-200">
-            <CardHeader>
+          <Card className="shadow-md bg-gray-200 rounded-xl overflow-hidden">
+            <CardHeader className='rounded-xl'>
               <CardTitle>Safety Map & Recommended Routes</CardTitle>
             </CardHeader>
             <CardContent className="bg-gray-100">

@@ -17,7 +17,10 @@ const UploadData = () => {
   // Initialize dropzone
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
-    accept: { 'image/*': [] }, // Accept image files
+    accept: {
+      'image/*': [],
+      'video/*': []
+    }, // Accept image and video files
     maxFiles: 1, // Limit to 1 file
     maxSize: 50000000, // Max size of 50MB
   });

@@ -6,12 +6,12 @@ export const postRouter = Router();
 
 postRouter.post("/create", authenticateUser,async (req: any, res: any) => {
   try {
-    const { title, content } = req.body;
+    const { title } = req.body;
 
-    if (!title || !content) {
+    if (!title ) {
       return res.status(400).json({
         statusCode: 400,
-        message: "Bad Request: Title and Content are required",
+        message: "Bad Request: Title is required",
       });
     }
     const userId = req.user.id;
@@ -20,8 +20,11 @@ postRouter.post("/create", authenticateUser,async (req: any, res: any) => {
     const post = await prisma.post.create({
       data: {
         title,
-        content,
         authorId: userId,
+        location:{
+          lang:req.body.location.lang,
+          lat:req.body.location.lat
+        }
       },
     });
 
@@ -53,7 +56,6 @@ postRouter.get("/", authenticateUser, async (req: any, res: any) => {
         comments: {
           select: {
             id: true,
-            content: true,
             createdAt: true,
             user: { select: { id: true, name: true, email: true } },
           },
@@ -80,18 +82,33 @@ postRouter.get("/", authenticateUser, async (req: any, res: any) => {
     });
   }
 });
-
-postRouter.get("/getall",authenticateUser ,async (req: any, res: any) => {
+postRouter.get("/getall", authenticateUser, async (req: any, res: any) => {
   try {
     const posts = await prisma.post.findMany({
       include: {  
-        likes: { select: { userId: true } }, 
+        author: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        likes: { 
+          select: { 
+            user: true 
+          } 
+        }, 
         comments: {
           select: {
             id: true,
-            content: true,
             createdAt: true,
-            user: { select: { id: true, name: true, email: true } },
+            user: { 
+              select: { 
+                id: true, 
+                name: true, 
+                email: true 
+              } 
+            },
           },
         },
       },
@@ -243,37 +260,32 @@ postRouter.delete(
 );
 
 // Comment on a Post
-postRouter.post(
-  "/:postId/comment",
-  authenticateUser,
-  async (req: any, res: any) => {
-    try {
-      const { postId } = req.params;
-      const { content } = req.body;
-      const userId = req.user?.id;
+// postRouter.post(
+//   "/:postId/comment",
+//   authenticateUser,
+//   async (req: any, res: any) => {
+//     try {
+//       const { postId } = req.params;
+//       const userId = req.user?.id;
 
-      if (!content) {
-        return res.status(400).json({ message: "Comment content is required" });
-      }
+//       // Check if post exists
+//       const post = await prisma.post.findUnique({ where: { id: postId } });
+//       if (!post) {
+//         return res.status(404).json({ message: "Post not found" });
+//       }
 
-      // Check if post exists
-      const post = await prisma.post.findUnique({ where: { id: postId } });
-      if (!post) {
-        return res.status(404).json({ message: "Post not found" });
-      }
+//       // Create the comment
+//       const comment = await prisma.comment.create({
+//         data: { userId, postId },
+//       });
 
-      // Create the comment
-      const comment = await prisma.comment.create({
-        data: { content, userId, postId },
-      });
-
-      return res.status(201).json({ message: "Comment added successfully", comment });
-    } catch (error: any) {
-      console.error("Error adding comment:", error);
-      return res.status(500).json({ message: "Internal Server Error", error: error.message });
-    }
-  }
-);
+//       return res.status(201).json({ message: "Comment added successfully", comment });
+//     } catch (error: any) {
+//       console.error("Error adding comment:", error);
+//       return res.status(500).json({ message: "Internal Server Error", error: error.message });
+//     }
+//   }
+// );
 
 // Fetch Comments for a Post
 postRouter.get("/:postId/comments", async (req: any, res: any) => {

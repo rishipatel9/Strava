@@ -19,9 +19,11 @@ model User {
   name      String?
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+  imageUrl  String?
   post      Post[]
   likes     Like[]
   comments  Comment[]
+  incident  Incidents[]
 }
 
 model Incidents {
@@ -32,20 +34,21 @@ model Incidents {
   latitude    String?
   longitude   String?
   coordinates String?
+  userId      String
+  user        User    @relation(fields: [userId], references: [id])
 }
 
 model Post {
   id        String   @id @default(cuid())
   title     String?
-  content   String?
   published Boolean  @default(false)
   author    User     @relation(fields: [authorId], references: [id])
   authorId  String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-
-  likes    Like[]
-  comments Comment[]
+  location  Json?    // Ensure location is JSON instead of geography
+  likes     Like[]
+  comments  Comment[]
 }
 
 model Like {

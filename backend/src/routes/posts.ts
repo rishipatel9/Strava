@@ -64,7 +64,7 @@ postRouter.get("/", authenticateUser, async (req: any, res: any) => {
     });
 
     // Mark posts that the user has liked
-    const updatedPosts = posts.map(post => ({
+    const updatedPosts = posts.map((post: { likes: any[]; })=> ({
       ...post,
       likedByUser: post.likes.some(like => like.userId === userId), // Check if the user has liked the post
     }));
@@ -120,7 +120,7 @@ postRouter.get("/getall", authenticateUser, async (req: any, res: any) => {
       },
     });
 
-    const filteredPosts = posts.filter(post => {
+    const filteredPosts = posts.filter((post: { location: any; }) => {
       const { lat, lang } = post?.location as PostLocation; 
       console.log(lat, lang);
       return getDistance(latitude, longitude, lat, lang) <= 10;

@@ -1,9 +1,3 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -14,16 +8,16 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  email     String    @unique
+  id        String      @id @default(cuid())
+  email     String      @unique
   name      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  createdAt DateTime    @default(now())
+  updatedAt DateTime    @updatedAt
   imageUrl  String?
-  post      Post[]
-  likes     Like[]
   comments  Comment[]
   incident  Incidents[]
+  likes     Like[]
+  post      Post[]
 }
 
 model Incidents {
@@ -39,25 +33,25 @@ model Incidents {
 }
 
 model Post {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   title     String?
-  published Boolean  @default(false)
-  author    User     @relation(fields: [authorId], references: [id])
+  published Boolean   @default(false)
   authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  location  Json?    // Ensure location is JSON instead of geography
-  likes     Like[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  location  Json?
   comments  Comment[]
+  likes     Like[]
+  author    User      @relation(fields: [authorId], references: [id])
 }
 
 model Like {
   id        String   @id @default(cuid())
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 
   @@unique([userId, postId])
 }
@@ -65,9 +59,9 @@ model Like {
 model Comment {
   id        String   @id @default(cuid())
   content   String
-  user      User     @relation(fields: [userId], references: [id])
   userId    String
-  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
   postId    String
   createdAt DateTime @default(now())
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
 }

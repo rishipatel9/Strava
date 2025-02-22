@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import cors from "cors";
 import { userRouter } from "./routes/user";
 import { postRouter } from "./routes/posts";
+import { incidentRouter } from "./routes/inicident";
 import authenticateUser from "./middleware/auth.middleware";
 import { prisma } from "./utils/prisma";
 const app = express();
@@ -24,6 +25,7 @@ app.get("/", (req, res) => {
 });
 app.use("/user", userRouter);
 app.use("/posts", postRouter);
+app.use("/incident", incidentRouter);
 
 app.post("/signup", async (req, res) => {
   const { email, name, image } = req.body;

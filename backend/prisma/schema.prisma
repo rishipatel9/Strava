@@ -14,6 +14,8 @@ model User {
   createdAt DateTime    @default(now())
   updatedAt DateTime    @updatedAt
   imageUrl  String?
+  phoneNumber String?
+  userLocation Json?
   comments  Comment[]
   incident  Incidents[]
   likes     Like[]

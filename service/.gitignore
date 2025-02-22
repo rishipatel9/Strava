@@ -14,7 +14,7 @@ package-lock.json
 /dist
 /build
 /out
-
+venv/
 # IDE and editor files
 .idea/
 .vscode/
